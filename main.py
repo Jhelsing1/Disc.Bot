@@ -1,18 +1,14 @@
-import discord
 import os
+import discord
+from discord.ext import commands
 
-client = discord.Client()
+bot = commands.Bot(command_prefix = '!')
+TOKEN = os.environ.get("DISCORD_TOKEN")
 
-@client.event
-async def on_ready():
-    print('We have logged in as {0.user}'.format(client))
+@bot.command()
+async def hello(ctx):
+  await ctx.reply('Hello!')
 
-@client.event
-async def on_message(message):
-    if message.author == client.user:
-        return
 
-    if message.content.startswith('$hello'):
-        await message.channel.send('Hello!')
 
-client.run(os.getenv('TOKEN'))
+bot.run(os.getenv('TOKEN'))
