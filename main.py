@@ -39,9 +39,10 @@ async def TTThelp(ctx):
   TTTEmbed.add_field(name = 'Commands to play', value = '!playTTT to start. All directions are listed in the game. To check your statis, please use !statsTTT.', inline = False)
   await ctx.send(embed = TTTEmbed)
 
+#plays tic tac toe
 @bot.command()
 async def playTTT(ctx):
-  board=['0','0','0','0','0','0','0','0','0']
+  board=['-','-','-','-','-','-','-','-','-']
   p1 = ctx.author.id
   p1_name = ctx.author
   await ctx.send(f"Player one confirmed as {p1_name}. Player two, please type \"playTTT\".")
@@ -61,7 +62,7 @@ async def playTTT(ctx):
         return inner_check
 
   def check_filled(num):
-    if board[num] == '0':
+    if board[num] == '-':
       return True
     return False
   def game_board(cp):
