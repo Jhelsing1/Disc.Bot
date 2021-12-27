@@ -200,7 +200,7 @@ async def playC4(ctx):
               return False
             try:
               x = int(msg.content)
-              if x <= 0 or x >= 6:
+              if x <= 0 or x >= 8:
                 return False
               return True
             except ValueError:
@@ -215,7 +215,10 @@ async def playC4(ctx):
     return False
 
   def wicd(dir,token, num, row, col):
-    if board[col][row] != token:
+    try:
+      if board[col][row] != token:
+        return False
+    except IndexError:
       return False
     if dir == 'D':
       try:
@@ -373,8 +376,5 @@ async def playC4(ctx):
 @commands.is_owner()
 async def shutdown(ctx):
     await ctx.bot.logout()
-
-#178384103605927937
-
 
 bot.run(os.getenv('TOKEN'))
