@@ -17,8 +17,8 @@ async def info(ctx):
   helpEmbed.add_field(name = '!C4Help', value = 'View the rules and commands of Connect four.', inline = False)
   helpEmbed.add_field(name = '!playTTT', value = 'Start a game of tic tac toe. Requires two players.', inline = False)
   helpEmbed.add_field(name = '!TTTHelp', value = 'View the rules and commands of tic tac toe.', inline = False)
-  helpEmbed.add_field(name = '!statsC4', value = 'View your win-loss and your most recent games of connect four. Work in progress', inline = False)
-  helpEmbed.add_field(name = '!statsTTT', value = 'View your win-loss and your most recent games of tic tac toe. Work in progress', inline = False)
+  helpEmbed.add_field(name = '!statsC4', value = 'View your win-loss and your most recent games of connect four.', inline = False)
+  helpEmbed.add_field(name = '!statsTTT', value = 'View your win-loss and your most recent games of tic tac toe.', inline = False)
   await ctx.send(embed = helpEmbed)
 
 @bot.command()
@@ -30,29 +30,29 @@ async def statsC4(ctx):
   await update_user_data(UserStats,user)
   W = UserStats[user]['win_C4']
   L = UserStats[user]['Loss_C4']
-  statsEmbed = discord.Embed(title = f"{ctx.message.author.name}'s current stats", description = 'Current connect four win/loss:')
-  statsEmbed.add_field(name = 'Wins: ', value = f'${W}')
-  statsEmbed.add_field(name = 'Losses: ', value = f'${L}')
+  statsEmbed = discord.Embed(title = f"{ctx.message.author.name}'s current stats", description = 'Current connect four win/loss:',color = 0x45B39D)
+  statsEmbed.add_field(name = 'Wins: ', value = f'{W}')
+  statsEmbed.add_field(name = 'Losses: ', value = f'{L}')
   await ctx.send(embed = statsEmbed)
   with open(absp, 'w') as f:
     json.dump(UserStats, f)
 
 @bot.command()
 async def statsTTT(ctx):
-
-  with open('UserStats.json', 'r') as f:
+  absp = os.path.abspath('UserStats.json')
+  with open(absp, 'r') as f:
     UserStats = json.load(f)
   user = str(ctx.message.author.id)
   await update_user_data(UserStats,user)
   W = UserStats[user]['win_TTT']
   L = UserStats[user]['Loss_TTT']
   T = UserStats[user]['Tie_TTT']
-  statsEmbed = discord.Embed(title = f"{ctx.message.author.name}'s current stats", description = 'Current connect four win/loss:')
-  statsEmbed.add_field(name = 'Wins: ', value = f'${W}')
-  statsEmbed.add_field(name = 'Losses: ', value = f'${L}')
-  statsEmbed.add_field(name = 'Ties: ', value = f'${T}')
+  statsEmbed = discord.Embed(title = f"{ctx.message.author.name}'s current stats", description = 'Current connect four win/loss:',color = 0x45B39D)
+  statsEmbed.add_field(name = 'Wins: ', value = f'{W}')
+  statsEmbed.add_field(name = 'Losses: ', value = f'{L}')
+  statsEmbed.add_field(name = 'Ties: ', value = f'{T}')
   await ctx.send(embed = statsEmbed)
-  with open('UserStats.json', 'w') as f:
+  with open(absp, 'w') as f:
     json.dump(UserStats, f)
 
 @bot.command()
@@ -98,13 +98,13 @@ async def update_win_Loss(UserStats,user,game,WL):
 #plays tic tac toe
 @bot.command()
 async def playTTT(ctx):
-
-  with open('UserStats.json', 'r') as f:
+  absp = os.path.abspath('UserStats.json')
+  with open(absp, 'r') as f:
     UserStats = json.load(f)
 
   board=['-','-','-','-','-','-','-','-','-']
   p1_name = ctx.author
-  p1 = ctx.author.id
+  p1 = str(ctx.author.id)
   
   await update_user_data(UserStats, p1)
 
@@ -182,7 +182,7 @@ async def playTTT(ctx):
 
   msg = await bot.wait_for("message", check=check)
   p2_name = msg.author
-  p2 = msg.author.id
+  p2 = str(msg.author.id)
   await update_user_data(UserStats, p2)
   firs = random.randint(1,2)
   spaces = 0
@@ -216,39 +216,38 @@ async def playTTT(ctx):
     t = wincond()
     if t == 1:
       emb = discord.Embed(title = f'Concluded game,{p1_name} vs {p2_name}' , description = f'Congratulations to {p1_name} for winning the game.', color=0xF5B041)
+      await ctx.send(embed = emb)
+      spaces = 9
       await update_win_Loss(UserStats,p1,'TTT','W')
       await update_win_Loss(UserStats,p2,'TTT','L')
 
-      await ctx.send(embed = emb)
-      spaces = 9
     elif t == 2:
       emb = discord.Embed(title = f'Concluded game,{p1_name} vs {p2_name}' , description = f'Congratulations to {p2_name} for winning the game.', color=0xF5B041)
+      await ctx.send(embed = emb)
+      spaces = 9
       await update_win_Loss(UserStats,p2,'TTT','W')
       await update_win_Loss(UserStats,p1,'TTT','L')
 
-      await ctx.send(embed = emb)
-      spaces = 9
     elif spaces == 8:
        emb = discord.Embed(title = f'Concluded game,{p1_name} vs {p2_name}' , description = f'It was a tie, thank you for playing.', color=0xF5B041)
+       await ctx.send(embed = emb)
        await update_win_Loss(UserStats,p2,'TTT','Tie')
        await update_win_Loss(UserStats,p1,'TTT','Tie')
-
-       await ctx.send(embed = emb)
        
     spaces += 1
-  with open('UserStats.json', 'w') as f:
+  with open(absp, 'w') as f:
         json.dump(UserStats, f)
 
 @bot.command()
 async def playC4(ctx):
-
-  with open('UserStats.json', 'r') as f:
+  absp = os.path.abspath('UserStats.json')
+  with open(absp, 'r') as f:
     UserStats = json.load(f)
 
   board=[['-','-','-','-','-','-'],['-','-','-','-','-','-'],['-','-','-','-','-','-'],['-','-','-','-','-','-'],['-','-','-','-','-','-'],['-','-','-','-','-','-'],['-','-','-','-','-','-']]
   next_empty = [0,0,0,0,0,0,0]
   p1_name = ctx.author
-  p1 = ctx.author.id
+  p1 = str(ctx.author.id)
   await ctx.send(f"Player one confirmed as {p1_name}. Player two, please type \"playC4\".")
 
   await update_user_data(UserStats, p1)
@@ -258,7 +257,7 @@ async def playC4(ctx):
 
   msg = await bot.wait_for("message", check=check)
   p2_name = msg.author
-  p2 = msg.author.id
+  p2 =str(msg.author.id)
   await update_user_data(UserStats, p2)
   firs = random.randint(1,2)
   if firs == 1:
@@ -464,7 +463,7 @@ async def playC4(ctx):
        
     spaces += 1
 
-  with open('UserStats.json', 'w') as f:
+  with open(absp, 'w') as f:
         json.dump(UserStats, f)
 
 @bot.command()
