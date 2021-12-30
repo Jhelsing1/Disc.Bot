@@ -6,7 +6,6 @@ from discord.ext import commands
 from dotenv import load_dotenv
 load_dotenv()
 
-
 bot = commands.Bot(command_prefix = '!')
 
 TOKEN = os.environ.get('TOKEN')
@@ -22,6 +21,39 @@ async def info(ctx):
   helpEmbed.add_field(name = '!statsTTT', value = 'View your win-loss and your most recent games of tic tac toe. Work in progress', inline = False)
   await ctx.send(embed = helpEmbed)
 
+@bot.command()
+async def statsC4(ctx):
+  absp = os.path.abspath('UserStats.json')
+  with open(absp, 'r') as f:
+    UserStats = json.load(f)
+  user = str(ctx.message.author.id)
+  await update_user_data(UserStats,user)
+  W = UserStats[user]['win_C4']
+  L = UserStats[user]['Loss_C4']
+  statsEmbed = discord.Embed(title = f"{ctx.message.author.name}'s current stats", description = 'Current connect four win/loss:')
+  statsEmbed.add_field(name = 'Wins: ', value = f'${W}')
+  statsEmbed.add_field(name = 'Losses: ', value = f'${L}')
+  await ctx.send(embed = statsEmbed)
+  with open(absp, 'w') as f:
+    json.dump(UserStats, f)
+
+@bot.command()
+async def statsTTT(ctx):
+
+  with open('UserStats.json', 'r') as f:
+    UserStats = json.load(f)
+  user = str(ctx.message.author.id)
+  await update_user_data(UserStats,user)
+  W = UserStats[user]['win_TTT']
+  L = UserStats[user]['Loss_TTT']
+  T = UserStats[user]['Tie_TTT']
+  statsEmbed = discord.Embed(title = f"{ctx.message.author.name}'s current stats", description = 'Current connect four win/loss:')
+  statsEmbed.add_field(name = 'Wins: ', value = f'${W}')
+  statsEmbed.add_field(name = 'Losses: ', value = f'${L}')
+  statsEmbed.add_field(name = 'Ties: ', value = f'${T}')
+  await ctx.send(embed = statsEmbed)
+  with open('UserStats.json', 'w') as f:
+    json.dump(UserStats, f)
 
 @bot.command()
 async def C4help(ctx):
@@ -39,11 +71,43 @@ async def TTThelp(ctx):
   TTTEmbed.add_field(name = 'Commands to play', value = '!playTTT to start. All directions are listed in the game. To check your statis, please use !statsTTT.', inline = False)
   await ctx.send(embed = TTTEmbed)
 
+async def update_user_data(UserStats,user):
+  user_id = str(user)
+  if user_id not in UserStats:
+    UserStats[user_id] = {}
+    UserStats[user_id]['win_TTT'] = 0
+    UserStats[user_id]['Loss_TTT'] = 0
+    UserStats[user_id]['Tie_TTT'] = 0
+    UserStats[user_id]['win_C4'] = 0
+    UserStats[user_id]['Loss_C4'] = 0
+
+async def update_win_Loss(UserStats,user,game,WL):
+  if game == 'C4':
+    if WL == 'W':
+      UserStats[user]['win_C4'] += 1
+    else:
+      UserStats[user]['Loss_C4'] += 1
+  else:
+    if WL == 'W':
+      UserStats[user]['win_TTT'] += 1
+    elif WL == 'L':
+      UserStats[user]['Loss_TTT'] += 1
+    else:
+      UserStats[user]['Tie_TTT'] += 1
+
 #plays tic tac toe
 @bot.command()
 async def playTTT(ctx):
+
+  with open('UserStats.json', 'r') as f:
+    UserStats = json.load(f)
+
   board=['-','-','-','-','-','-','-','-','-']
   p1_name = ctx.author
+  p1 = ctx.author.id
+  
+  await update_user_data(UserStats, p1)
+
   await ctx.send(f"Player one confirmed as {p1_name}. Player two, please type \"playTTT\".")
   def check(m):
         return m.content == "playTTT" and m.channel == ctx.channel
@@ -118,6 +182,8 @@ async def playTTT(ctx):
 
   msg = await bot.wait_for("message", check=check)
   p2_name = msg.author
+  p2 = msg.author.id
+  await update_user_data(UserStats, p2)
   firs = random.randint(1,2)
   spaces = 0
   if firs == 1:
@@ -150,30 +216,50 @@ async def playTTT(ctx):
     t = wincond()
     if t == 1:
       emb = discord.Embed(title = f'Concluded game,{p1_name} vs {p2_name}' , description = f'Congratulations to {p1_name} for winning the game.', color=0xF5B041)
+      await update_win_Loss(UserStats,p1,'TTT','W')
+      await update_win_Loss(UserStats,p2,'TTT','L')
+
       await ctx.send(embed = emb)
       spaces = 9
     elif t == 2:
       emb = discord.Embed(title = f'Concluded game,{p1_name} vs {p2_name}' , description = f'Congratulations to {p2_name} for winning the game.', color=0xF5B041)
+      await update_win_Loss(UserStats,p2,'TTT','W')
+      await update_win_Loss(UserStats,p1,'TTT','L')
+
       await ctx.send(embed = emb)
       spaces = 9
     elif spaces == 8:
        emb = discord.Embed(title = f'Concluded game,{p1_name} vs {p2_name}' , description = f'It was a tie, thank you for playing.', color=0xF5B041)
+       await update_win_Loss(UserStats,p2,'TTT','Tie')
+       await update_win_Loss(UserStats,p1,'TTT','Tie')
+
        await ctx.send(embed = emb)
        
     spaces += 1
+  with open('UserStats.json', 'w') as f:
+        json.dump(UserStats, f)
 
 @bot.command()
 async def playC4(ctx):
+
+  with open('UserStats.json', 'r') as f:
+    UserStats = json.load(f)
+
   board=[['-','-','-','-','-','-'],['-','-','-','-','-','-'],['-','-','-','-','-','-'],['-','-','-','-','-','-'],['-','-','-','-','-','-'],['-','-','-','-','-','-'],['-','-','-','-','-','-']]
   next_empty = [0,0,0,0,0,0,0]
   p1_name = ctx.author
+  p1 = ctx.author.id
   await ctx.send(f"Player one confirmed as {p1_name}. Player two, please type \"playC4\".")
+
+  await update_user_data(UserStats, p1)
 
   def check(m):
         return m.content == "playC4" and m.channel == ctx.channel
 
   msg = await bot.wait_for("message", check=check)
   p2_name = msg.author
+  p2 = msg.author.id
+  await update_user_data(UserStats, p2)
   firs = random.randint(1,2)
   if firs == 1:
     await ctx.send(f"Randomizing go order, {p1_name} will go first.")
@@ -354,6 +440,9 @@ async def playC4(ctx):
             await ctx.send(embed = emb)
             spaces = 100
 
+            await update_win_Loss(UserStats,p2,'C4','W')
+            await update_win_Loss(UserStats,p1,'C4','L')
+
     elif firs % 2 == 1:
       k = 0
       await ctx.send(embed = game_board(p1_name))
@@ -369,8 +458,14 @@ async def playC4(ctx):
             emb = discord.Embed(title = f'Concluded game,{p1_name} vs {p2_name}' , description = f'Congratulations to {p1_name} for winning the game.', color=0xF5B041)
             await ctx.send(embed = emb)
             spaces = 100
+
+            await update_win_Loss(UserStats,p1,'C4','W')
+            await update_win_Loss(UserStats,p2,'C4','L')
        
     spaces += 1
+
+  with open('UserStats.json', 'w') as f:
+        json.dump(UserStats, f)
 
 @bot.command()
 @commands.is_owner()
