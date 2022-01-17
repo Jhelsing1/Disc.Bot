@@ -30,9 +30,46 @@ async def statsC4(ctx):
   await update_user_data(UserStats,user)
   W = UserStats[user]['win_C4']
   L = UserStats[user]['Loss_C4']
+  LG = UserStats[user]['Last_games_C4']
+  sp = UserStats[user]['C4_LastGame']
   statsEmbed = discord.Embed(title = f"{ctx.message.author.name}'s current stats", description = 'Current connect four win/loss:',color = 0x45B39D)
   statsEmbed.add_field(name = 'Wins: ', value = f'{W}')
   statsEmbed.add_field(name = 'Losses: ', value = f'{L}')
+  LG_P = ''
+  if sp == 0:
+    LG_P = LG[0].split(';')
+    G = LG[1].split(';')
+    LG_P.append(G[0])
+    LG_P.append(G[1])
+    G = LG[2].split(';')
+    LG_P.append(G[0])
+    LG_P.append(G[1])
+  elif sp == 1:
+    LG_P = LG[1].split(';')
+    G = LG[2].split(';')
+    LG_P.append(G[0])
+    LG_P.append(G[1])
+    G = LG[0].split(';')
+    LG_P.append(G[0])
+    LG_P.append(G[1])
+  else:
+    LG_P = LG[2].split(';')
+    G = LG[0].split(';')
+    LG_P.append(G[0])
+    LG_P.append(G[1])
+    G = LG[1].split(';')
+    LG_P.append(G[0])
+    LG_P.append(G[1])
+  x = 0
+  while x in range(6):
+    if LG_P[x] == 'W':
+      LG_P[x] = 'Won'
+    elif LG_P[x] == 'L':
+      LG_P[x] = 'Loss'
+    x += 1
+
+  statsEmbed.add_field(name = 'Last Games ', value = f'{LG_P[1]} vs {LG_P[0]},{LG_P[3]} vs {LG_P[2]}, {LG_P[5]} vs {LG_P[4]}')
+
   await ctx.send(embed = statsEmbed)
   with open(absp, 'w') as f:
     json.dump(UserStats, f)
@@ -47,10 +84,50 @@ async def statsTTT(ctx):
   W = UserStats[user]['win_TTT']
   L = UserStats[user]['Loss_TTT']
   T = UserStats[user]['Tie_TTT']
+  LG = UserStats[user]['Last_games_TTT']
+  sp = UserStats[user]['TTT_LastGame']
   statsEmbed = discord.Embed(title = f"{ctx.message.author.name}'s current stats", description = 'Current connect four win/loss:',color = 0x45B39D)
   statsEmbed.add_field(name = 'Wins: ', value = f'{W}')
   statsEmbed.add_field(name = 'Losses: ', value = f'{L}')
   statsEmbed.add_field(name = 'Ties: ', value = f'{T}')
+
+  LG_P = ''
+  if sp == 0:
+    LG_P = LG[0].split(';')
+    G = LG[1].split(';')
+    LG_P.append(G[0])
+    LG_P.append(G[1])
+    G = LG[2].split(';')
+    LG_P.append(G[0])
+    LG_P.append(G[1])
+  elif sp == 1:
+    LG_P = LG[1].split(';')
+    G = LG[2].split(';')
+    LG_P.append(G[0])
+    LG_P.append(G[1])
+    G = LG[0].split(';')
+    LG_P.append(G[0])
+    LG_P.append(G[1])
+  else:
+    LG_P = LG[2].split(';')
+    G = LG[0].split(';')
+    LG_P.append(G[0])
+    LG_P.append(G[1])
+    G = LG[1].split(';')
+    LG_P.append(G[0])
+    LG_P.append(G[1])
+  x = 0
+  while x in range(6):
+    if LG_P[x] == 'W':
+      LG_P[x] = 'Won'
+    elif LG_P[x] == 'L':
+      LG_P[x] = 'Loss'
+    elif LG_P[x] == 'T':
+      LG_P[x] = 'Tie'
+    x += 1
+
+  statsEmbed.add_field(name = 'Last Games ', value = f'{LG_P[1]} vs {LG_P[0]},{LG_P[3]} vs {LG_P[2]}, {LG_P[5]} vs {LG_P[4]}')
+
   await ctx.send(embed = statsEmbed)
   with open(absp, 'w') as f:
     json.dump(UserStats, f)
@@ -78,22 +155,65 @@ async def update_user_data(UserStats,user):
     UserStats[user_id]['win_TTT'] = 0
     UserStats[user_id]['Loss_TTT'] = 0
     UserStats[user_id]['Tie_TTT'] = 0
+    UserStats[user_id]['Last_games_TTT'] = ['- -','- -','- -']
+    UserStats[user_id]['TTT_LastGame'] = 0
     UserStats[user_id]['win_C4'] = 0
     UserStats[user_id]['Loss_C4'] = 0
+    UserStats[user_id]['Last_games_C4'] = ['- -','- -','- -']
+    UserStats[user_id]['C4_LastGame'] = 0
 
-async def update_win_Loss(UserStats,user,game,WL):
+async def update_win_Loss(UserStats,user,game,WL,p2):
   if game == 'C4':
     if WL == 'W':
       UserStats[user]['win_C4'] += 1
+      str = p2.name + ' W'
+
+      UserStats[user]['Last_games_C4'][UserStats[user]['C4_LastGame']] = str
+      if UserStats[user]['C4_LastGame'] == 2:
+        UserStats[user]['C4_LastGame'] = 0
+      else:
+        UserStats[user]['C4_LastGame'] += 1
+
     else:
       UserStats[user]['Loss_C4'] += 1
+
+      str = p2.name + ' L'
+      UserStats[user]['Last_games_C4'][UserStats[user]['C4_LastGame']] = str
+      if UserStats[user]['C4_LastGame'] == 2:
+        UserStats[user]['C4_LastGame'] = 0
+      else:
+        UserStats[user]['C4_LastGame'] += 1
+
   else:
     if WL == 'W':
       UserStats[user]['win_TTT'] += 1
+
+      str = p2.name + ' W'
+      UserStats[user]['Last_games_TTT'][UserStats[user]['TTT_LastGame']] = str
+      if UserStats[user]['TTT_LastGame'] == 2:
+        UserStats[user]['TTT_LastGame'] = 0
+      else:
+        UserStats[user]['TTT_LastGame'] += 1
+
     elif WL == 'L':
       UserStats[user]['Loss_TTT'] += 1
+
+      str = p2.name + ' L'
+      UserStats[user]['Last_games_TTT'][UserStats[user]['TTT_LastGame']] = str
+      if UserStats[user]['TTT_LastGame'] == 2:
+        UserStats[user]['TTT_LastGame'] = 0
+      else:
+        UserStats[user]['TTT_LastGame'] += 1
+
     else:
       UserStats[user]['Tie_TTT'] += 1
+
+      str = p2.name + ' T'
+      UserStats[user]['Last_games_TTT'][UserStats[user]['TTT_LastGame']] = str
+      if UserStats[user]['TTT_LastGame'] == 2:
+        UserStats[user]['TTT_LastGame'] = 0
+      else:
+        UserStats[user]['TTT_LastGame'] += 1
 
 #plays tic tac toe
 @bot.command()
@@ -116,6 +236,8 @@ async def playTTT(ctx):
             if msg.author != auth:
               return False
             try:
+              if msg.content == 'abort':
+                return True
               x = int(msg.content)
               if x <= 0 or x >= 10:
                 return False
@@ -123,6 +245,17 @@ async def playTTT(ctx):
             except ValueError:
               return False
         return inner_check
+
+  def abrt_check(auth):
+    def inner_check(msg):
+      if msg.author != auth:
+        return False
+      if msg.content == 'abort' or msg.content == 'cancel':
+        return True
+      else: 
+        return False
+    return inner_check
+
 
   def check_filled(num):
     if board[num] == '-':
@@ -134,7 +267,7 @@ async def playTTT(ctx):
     brdEmbed = discord.Embed(title = f'Ongoing game,{p1_name} vs {p2_name}' , description = f'{cp}\'s turn, please enter a number between 1-9 ', color=0x7718FF)
     brdEmbed.add_field(name = 'Game Board', value = f'```{gb}```', inline = False)
     brdEmbed.add_field(name = 'Example board with correlating input values:', value = f'```{test_board}```', inline = False)
-    brdEmbed.add_field(name = 'How to play:', value = f'enter the number between 1-9 which correlates to its position on the board. ', inline = False)
+    brdEmbed.add_field(name = 'How to play:', value = f'enter the number between 1-9 which correlates to its position on the board. When it\'s your turn, you can start the aborting process by typing \'abort\'.', inline = False)
     return brdEmbed
   def wincond():
     if board[0] == board[1] and board[0] == board[2]:
@@ -198,41 +331,61 @@ async def playTTT(ctx):
       k = 0
       while k == 0:
         mxg = await bot.wait_for('message',check = board_check(p2_name))
-        if check_filled(int(mxg.content)-1):
-          board[int(mxg.content)-1] = 'o'
-          k += 1
-          firs += 1
+        if mxg.content == 'abort':
+          await ctx.send(f"Abort vote detected, {p1_name} please type \"abort\" to cancel the match or \"cancel \" to continue playing.")
+          mtg = await bot.wait_for('message',check = abrt_check(p1_name))
+          if mtg.content == 'abort':
+            k += 1
+            await ctx.send("Game aborted")
+            spaces = 10
+          else:
+            await ctx.send(embed = game_board(p2_name))
+        else:
+          if check_filled(int(mxg.content)-1):
+            board[int(mxg.content)-1] = 'o'
+            k += 1
+            firs += 1
 
     elif firs % 2 == 1:
       k = 0
       await ctx.send(embed = game_board(p1_name))
       while k == 0:
         mxg = await bot.wait_for('message',check = board_check(p1_name))
-        if check_filled(int(mxg.content)-1):
-          board[int(mxg.content)-1] = 'x'
-          k += 1
-          firs += 1
+        if mxg.content == 'abort':
+          await ctx.send(f"Abort vote detected, {p2_name} please type \"abort\" to cancel the match or \"cancel \" to continue playing.")
+          mtg = await bot.wait_for('message',check = abrt_check(p2_name))
+          if mtg.content == 'abort':
+            k += 1
+            await ctx.send("Game aborted")
+            spaces = 10
+          else:
+            await ctx.send(embed = game_board(p1_name))
+        else:
+          if check_filled(int(mxg.content)-1):
+            board[int(mxg.content)-1] = 'x'
+            k += 1
+            firs += 1
 
     t = wincond()
     if t == 1:
       emb = discord.Embed(title = f'Concluded game,{p1_name} vs {p2_name}' , description = f'Congratulations to {p1_name} for winning the game.', color=0xF5B041)
       await ctx.send(embed = emb)
       spaces = 9
-      await update_win_Loss(UserStats,p1,'TTT','W')
-      await update_win_Loss(UserStats,p2,'TTT','L')
+      await update_win_Loss(UserStats,p1,'TTT','W',p2_name)
+      await update_win_Loss(UserStats,p2,'TTT','L',p1_name)
 
     elif t == 2:
       emb = discord.Embed(title = f'Concluded game,{p1_name} vs {p2_name}' , description = f'Congratulations to {p2_name} for winning the game.', color=0xF5B041)
       await ctx.send(embed = emb)
       spaces = 9
-      await update_win_Loss(UserStats,p2,'TTT','W')
-      await update_win_Loss(UserStats,p1,'TTT','L')
+      await update_win_Loss(UserStats,p2,'TTT','W',p1_name)
+      await update_win_Loss(UserStats,p1,'TTT','L',p2_name)
 
     elif spaces == 8:
        emb = discord.Embed(title = f'Concluded game,{p1_name} vs {p2_name}' , description = f'It was a tie, thank you for playing.', color=0xF5B041)
        await ctx.send(embed = emb)
-       await update_win_Loss(UserStats,p2,'TTT','Tie')
-       await update_win_Loss(UserStats,p1,'TTT','Tie')
+       await update_win_Loss(UserStats,p2,'TTT','Tie',p1_name)
+       await update_win_Loss(UserStats,p1,'TTT','Tie',p2_name)
        
     spaces += 1
   with open(absp, 'w') as f:
@@ -276,7 +429,7 @@ async def playC4(ctx):
     brdEmbed = discord.Embed(title = f'Ongoing game,{p1_name} vs {p2_name}' , description = f'{cp}\'s turn, please enter a number between 1-7 ', color=0x7718FF)
     brdEmbed.add_field(name = 'Game Board', value = f'```{gb}```', inline = False)
     brdEmbed.add_field(name = 'Enter the column number to drop token in that column', value = '```1 | 2 | 3 | 4 | 5 | 6 | 7```', inline = False)
-    brdEmbed.add_field(name = 'How to play:', value = f'enter the number between 1-7 which correlates to the column on the board to drop the token, connect 4 tokens to win. ', inline = False)
+    brdEmbed.add_field(name = 'How to play:', value = f'enter the number between 1-7 which correlates to the column on the board to drop the token, connect 4 tokens to win. When it\'s your turn, you can start the aborting process by typing \'abort\'.', inline = False)
     return brdEmbed
 
   def board_check(auth):
@@ -284,6 +437,8 @@ async def playC4(ctx):
             if msg.author != auth:
               return False
             try:
+              if msg.content == 'abort':
+                return True
               x = int(msg.content)
               if x <= 0 or x >= 8:
                 return False
@@ -291,6 +446,16 @@ async def playC4(ctx):
             except ValueError:
               return False
         return inner_check
+
+  def abrt_check(auth):
+    def inner_check(msg):
+      if msg.author != auth:
+        return False
+      if msg.content == 'abort' or msg.content == 'cancel':
+        return True
+      else: 
+        return False
+    return inner_check
 
   def check_filled(num):
     if next_empty[num] == 6:
@@ -428,38 +593,58 @@ async def playC4(ctx):
       k = 0
       while k == 0:
         mxg = await bot.wait_for('message',check = board_check(p2_name))
-        if check_filled(int(mxg.content)-1):
-          board[int(mxg.content)-1][next_empty[int(mxg.content)-1]] = 'o'
-          k += 1
-          firs += 1
-          next_empty[int(mxg.content)-1] += 1
-
-          if wincond(int(mxg.content)-1, 'o'):
-            emb = discord.Embed(title = f'Concluded game,{p1_name} vs {p2_name}' , description = f'Congratulations to {p2_name} for winning the game.', color=0xF5B041)
-            await ctx.send(embed = emb)
+        if mxg.content == 'abort':
+          await ctx.send(f"Abort vote detected, {p1_name} please type \"abort\" to cancel the match or \"cancel \" to continue playing.")
+          mtg = await bot.wait_for('message',check = abrt_check(p1_name))
+          if mtg.content == 'abort':
+            k += 1
+            await ctx.send("Game aborted")
             spaces = 100
+          else:
+            await ctx.send(embed = game_board(p2_name))
+        else:
+          if check_filled(int(mxg.content)-1):
+            board[int(mxg.content)-1][next_empty[int(mxg.content)-1]] = 'o'
+            k += 1
+            firs += 1
+            next_empty[int(mxg.content)-1] += 1
 
-            await update_win_Loss(UserStats,p2,'C4','W')
-            await update_win_Loss(UserStats,p1,'C4','L')
+            if wincond(int(mxg.content)-1, 'o'):
+              emb = discord.Embed(title = f'Concluded game,{p1_name} vs {p2_name}' , description = f'Congratulations to {p2_name} for winning the game.', color=0xF5B041)
+              await ctx.send(embed = emb)
+              spaces = 100
+
+              await update_win_Loss(UserStats,p2,'C4','W',p1_name)
+              await update_win_Loss(UserStats,p1,'C4','L',p2_name)
 
     elif firs % 2 == 1:
       k = 0
       await ctx.send(embed = game_board(p1_name))
       while k == 0:
         mxg = await bot.wait_for('message',check = board_check(p1_name))
-        if check_filled(int(mxg.content)-1):
-          board[int(mxg.content)-1][next_empty[int(mxg.content)-1]] = 'x'
-          k += 1
-          firs += 1
-          next_empty[int(mxg.content)-1] += 1
-
-          if wincond(int(mxg.content)-1, 'x'):
-            emb = discord.Embed(title = f'Concluded game,{p1_name} vs {p2_name}' , description = f'Congratulations to {p1_name} for winning the game.', color=0xF5B041)
-            await ctx.send(embed = emb)
+        if mxg.content == 'abort':
+          await ctx.send(f"Abort vote detected, {p2_name} please type \"abort\" to cancel the match or \"cancel \" to continue playing.")
+          mtg = await bot.wait_for('message',check = abrt_check(p2_name))
+          if mtg.content == 'abort':
+            k += 1
+            await ctx.send("Game aborted")
             spaces = 100
+          else:
+            await ctx.send(embed = game_board(p1_name))
+        else:
+          if check_filled(int(mxg.content)-1):
+            board[int(mxg.content)-1][next_empty[int(mxg.content)-1]] = 'x'
+            k += 1
+            firs += 1
+            next_empty[int(mxg.content)-1] += 1
 
-            await update_win_Loss(UserStats,p1,'C4','W')
-            await update_win_Loss(UserStats,p2,'C4','L')
+            if wincond(int(mxg.content)-1, 'x'):
+              emb = discord.Embed(title = f'Concluded game,{p1_name} vs {p2_name}' , description = f'Congratulations to {p1_name} for winning the game.', color=0xF5B041)
+              await ctx.send(embed = emb)
+              spaces = 100
+
+              await update_win_Loss(UserStats,p1,'C4','W',p2_name)
+              await update_win_Loss(UserStats,p2,'C4','L',p1_name)
        
     spaces += 1
 
