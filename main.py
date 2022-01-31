@@ -707,7 +707,6 @@ async def word_defusal(ctx):
   wrd_dict = wrd_file.readlines()
   wv = random.randint(0,853)
   cw = wrd_dict[wv]
-  print(cw)
   already_guessed = []
   current_displayline = []
   k = 0
