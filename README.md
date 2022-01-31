@@ -9,4 +9,8 @@ Commands:
  
  !playC4 to play a game of connect four
  
- !TTThelp or !C4 help to get help on tic tac toe or connect four respectively
+ !play_Bd to play bomb defusal (hangman)
+ 
+ !TTThelp, !BDhelp or !C4 help to get help on tic tac toe or connect four respectively
+
+thank you to https://github.com/Xethron for the hangman words!
