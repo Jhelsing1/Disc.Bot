@@ -1,3 +1,4 @@
+from decimal import DivisionByZero
 import os
 import discord
 import json
@@ -148,6 +149,14 @@ async def TTThelp(ctx):
   TTTEmbed.add_field(name = 'Commands to play', value = '!playTTT to start. All directions are listed in the game. To check your statis, please use !statsTTT.', inline = False)
   await ctx.send(embed = TTTEmbed)
 
+@bot.command()
+async def BDhelp(ctx):
+  TTTEmbed = discord.Embed(title = 'Bomb Defusal Help' , description = 'Basics of Bomb Defusal and relevant commands', color=0x77FF18)
+  TTTEmbed.add_field(name = 'Goal of the game', value = 'To win, find the word by guessing letters.', inline = False)
+  TTTEmbed.add_field(name = 'How to play', value = 'The player guesses a word, one letter each until the word is revealed or the player gets seven strikes, it\s hangman basically. ', inline = False)
+  TTTEmbed.add_field(name = 'Commands to play', value = '!playBD to start. All directions are listed in the game. To check your statis, please use !stats_BD.', inline = False)
+  await ctx.send(embed = TTTEmbed)
+
 async def update_user_data(UserStats,user):
   user_id = str(user)
   if user_id not in UserStats:
@@ -161,6 +170,9 @@ async def update_user_data(UserStats,user):
     UserStats[user_id]['Loss_C4'] = 0
     UserStats[user_id]['Last_games_C4'] = ['- -','- -','- -']
     UserStats[user_id]['C4_LastGame'] = 0
+    UserStats[user_id]['Win_DB'] = 0
+    UserStats[user_id]['Loss_DB'] = 0
+    UserStats[user_id]['Total_DB'] = 0
 
 async def update_win_Loss(UserStats,user,game,WL,p2):
   if game == 'C4':
@@ -214,6 +226,35 @@ async def update_win_Loss(UserStats,user,game,WL,p2):
         UserStats[user]['TTT_LastGame'] = 0
       else:
         UserStats[user]['TTT_LastGame'] += 1
+
+async def update_win_Loss_DB(UserStats,user,WL):
+  if WL == 'W':
+    UserStats[user]['Win_DB'] += 1
+    UserStats[user]['Total_DB'] += 1
+  else:
+    UserStats[user]['Loss_DB'] += 1
+    UserStats[user]['Total_DB'] += 1
+
+@bot.command()
+async def stats_BD(ctx):
+  absp = os.path.abspath('UserStats.json')
+  with open(absp, 'r') as f:
+    UserStats = json.load(f)
+  user = str(ctx.message.author.id)
+  await update_user_data(UserStats,user)
+  W = UserStats[user]['Win_DB']
+  L = UserStats[user]['Loss_DB']
+  T = UserStats[user]['Total_DB']
+  statsEmbed = discord.Embed(title = f"{ctx.message.author.name}'s current stats", description = 'Current Bomb Defusal win/loss:',color = 0x45B39D)
+  statsEmbed.add_field(name = 'Wins: ', value = f'{W}')
+  statsEmbed.add_field(name = 'Losses: ', value = f'{L}')
+  statsEmbed.add_field(name = 'Total Games: ', value = f'{T}', inline = False)
+  try:
+    k = float(W/T)
+  except:
+    k = 0
+  statsEmbed.add_field(name = 'Win percentage: ', value = f'{k}', inline = False)
+  await ctx.send(embed = statsEmbed)
 
 #plays tic tac toe
 @bot.command()
@@ -650,6 +691,141 @@ async def playC4(ctx):
 
   with open(absp, 'w') as f:
         json.dump(UserStats, f)
+
+@bot.command()
+async def word_defusal(ctx):
+
+  absp = os.path.abspath('UserStats.json')
+  with open(absp, 'r') as f:
+    UserStats = json.load(f)
+  p1_name = ctx.author
+  p1 = str(ctx.author.id)
+
+  await update_user_data(UserStats, p1)
+
+  wrd_file = open('words.txt', 'r')
+  wrd_dict = wrd_file.readlines()
+  wv = random.randint(0,853)
+  cw = wrd_dict[wv]
+  print(cw)
+  already_guessed = []
+  current_displayline = []
+  k = 0
+  while k < len(cw)-1:
+    current_displayline.append('_')
+    k+=1
+  strikes = [':white_large_square:',':white_large_square:',':white_large_square:',':white_large_square:',':white_large_square:',':white_large_square:',':white_large_square:']
+  strikes_num = 0
+
+  cw1 = []
+  for x in cw:
+    if len(cw1)<= len(cw)-1:
+     cw1.append(x)
+
+  def gameboard():
+    x = 7 - strikes_num
+    k = ""
+    h = ""
+    for a in strikes:
+      k += a + " "
+    for g in current_displayline:
+      h += g
+    brdembed = discord.Embed(title = f'{p1_name} is trying to defuse the bomb!' , description = 'A bomb\'s been planted and its code is not 7355608! Guerss the word to defuse it!', color=0x7718FF)
+    brdembed.add_field(name = 'Timer', value = f'{k}', inline = False)
+    brdembed.add_field(name = 'Word', value = f'```{h}```', inline = False)
+    brdembed.add_field(name = 'Already Guessed keys:', value = f'```{already_guessed}```', inline = False)
+    brdembed.add_field(name = 'Info:', value = f'You have {x} lives left until the timer runs out, so you\'d better choose your letters carefully!', inline = False)
+    brdembed.add_field(name = 'How to play:', value = 'Enter a letter by itself to try it for the code. Keep at it until the code is set! You can also walk away by writing \'abort\'.', inline = False)
+    return brdembed
+  
+  def wrdcheck(msg):
+    if msg.author  == p1_name:
+      x = msg.content
+      if len(x) == 1 and x.isalpha():
+        return True
+      elif x == 'abort':
+        return True
+      else:
+        return False
+    else:
+      return False
+
+  def abrtcheck(msg):
+    if msg.author  == p1_name:
+      x = msg.content
+      if x.lower() == 'y' or x.lower():
+        return True
+      else:
+        return False
+    else:
+      return False
+
+  def wincond():
+    if strikes_num == 7:
+      return 'l'
+    gx = 0
+    for item in cw1:
+      if item == '':
+        gx+=1
+    if gx == len(cw)-1:
+      return 'w'
+    else:
+      return 'x'
+
+  G = 0
+  eg = 0
+  while G == 0 and strikes_num < 7 and eg == 0:
+      await ctx.send(embed = gameboard())
+      mxg = await bot.wait_for('message',check = wrdcheck)
+      if mxg.content == 'abort':
+        await ctx.send("Are you sure you want to abort this game? Y/N")
+        mtg = await bot.wait_for('message',check = abrtcheck)
+        if mtg.content.lower() == 'y':
+          await ctx.send("Game aborted")
+          G = 8
+          strikes_num  == 100
+        else: 
+          await ctx.send("The game goes on!")
+          await ctx.send(embed = gameboard)
+      else:
+        el = mxg.content.lower()
+        if el in already_guessed:
+          await ctx.send("Letter already guessed, try again!")
+        else:
+          if el not in cw1:
+            strikes_num += 1 
+            x = 7 - strikes_num
+            await ctx.send(f"Uh oh! Wrong input! You only have {x} attempts left!")
+            already_guessed.append(el)
+            strikes[strikes_num-1] = ':red_square:'
+            if wincond() == 'l':
+              await update_win_Loss_DB(UserStats,p1,'L')
+              emb = discord.Embed(title = 'Bomb Detonated!' , description = 'You blew up spetacularly! Don\'t worry, it was all a dream :), or was it?', color=0xF5B041)
+              emb.add_field(name = 'Code Word:',value = f'The code ward was {cw}')
+              await ctx.send(embed = emb)
+              strikes_num = 8
+          else:
+            while el in cw1:
+              ind = cw1.index(el)
+              current_displayline[ind] = el
+              cw1[ind] = ''
+            await ctx.send("Good call!")
+            already_guessed.append(el)
+            if wincond() == 'w':
+              await update_win_Loss_DB(UserStats,p1,'W')
+              emb = discord.Embed(title = 'Bomb Defused!' , description = 'Congratulations, you didn\'t blow up!', color=0xF5B041)
+              emb.add_field(name = 'Code Word:',value = f'The code ward was {cw}')
+              await ctx.send(embed = emb)
+              eg = 1
+            elif wincond() == 'l':
+              await update_win_Loss_DB(UserStats,p1,'L')
+              emb = discord.Embed(title = 'Bomb Detonated!' , description = 'You blew up spetacularly! Don\'t worry, it was all a dream :), or was it?', color=0xF5B041)
+              emb.add_field(name = 'Code Word:',value = f'The code ward was {cw}')
+              await ctx.send(embed = emb)
+              strikes_num = 8
+
+  with open(absp, 'w') as f:
+    json.dump(UserStats, f)
 
 @bot.command()
 @commands.is_owner()
